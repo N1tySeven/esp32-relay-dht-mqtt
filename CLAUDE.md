@@ -53,7 +53,7 @@ src/main.cpp           — setup() / loop() only; no logic here
 - Use `char[]` + `memcpy`/`strcmp`/`snprintf` — never `String` class (heap fragmentation on ESP32).
 - Use `strcmp(topic, mqtt_topic_xxx) == 0` for exact topic matching — never `strstr`/`indexOf`.
 - Build JSON payloads with `snprintf` — ArduinoJson is not a dependency and must not be added.
-- Relay callback accepts `"ON"`, `"on"`, `"1"` (HIGH) and `"OFF"`, `"off"`, `"0"` (LOW).
+- Relay callback accepts only `"ON"` (HIGH) and `"OFF"` (LOW) — exact case, no aliases.
 
 ## MQTT Topics
 
@@ -62,5 +62,8 @@ src/main.cpp           — setup() / loop() only; no logic here
 | `relay_control` | Subscribe | Relay on GPIO 18 |
 | `relay_control_2` | Subscribe | Relay on GPIO 19 |
 | `DHT11` | Publish | `{"temperature":xx.x,"humidity":xx.x}` every 10 s |
+| `LDR` | Publish | `"BRIGHT"` or `"DARK"` — state-change only, checked every 2 s |
 
 Broker: `broker.hivemq.com:1883` — public, no TLS. Defined in `src/config.cpp`.
+
+**LDR sensor**: GPIO 34 (digital input, 3-pin DO module). LOW = bright, HIGH = dark. `ldr_publish()` only sends when state changes (uses `static int lastState`).

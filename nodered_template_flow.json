@@ -1,0 +1,154 @@
+[
+  {
+    "id": "hivemq",
+    "type": "mqtt-broker",
+    "name": "HiveMQ Public",
+    "broker": "broker.hivemq.com",
+    "port": "1883",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true
+  },
+  {
+    "id": "wsl",
+    "type": "websocket-listener",
+    "path": "/ws/iot",
+    "wholemsg": "false"
+  },
+  {
+    "id": "http_in_ui",
+    "type": "http in",
+    "name": "GET /ui",
+    "method": "get",
+    "url": "/ui",
+    "swaggerDoc": "",
+    "x": 100,
+    "y": 80,
+    "wires": [["tmpl"]]
+  },
+  {
+    "id": "tmpl",
+    "type": "template",
+    "name": "HTML Dashboard",
+    "field": "payload",
+    "fieldType": "msg",
+    "format": "html",
+    "syntax": "plain",
+    "template": "<!DOCTYPE html>\n<html lang=\"th\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>ESP32 IoT</title>\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:24px}\nh1{text-align:center;margin-bottom:8px;font-size:1.5rem;color:#38bdf8}\n.ws-bar{text-align:center;font-size:.8rem;margin-bottom:20px}\n.on{color:#22c55e}.off{color:#ef4444}\n.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;max-width:900px;margin:0 auto}\n.card{background:#1e293b;border-radius:16px;padding:24px;text-align:center}\n.lbl{font-size:.8rem;color:#94a3b8;margin-bottom:8px}\n.val{font-size:2.5rem;font-weight:700}\n.unit{font-size:.9rem;color:#94a3b8}\n.dot{width:52px;height:52px;border-radius:50%;margin:10px auto;transition:background .4s,box-shadow .4s}\n.bright{background:#fbbf24;box-shadow:0 0 22px #fbbf24}\n.dark{background:#334155}\n.ldr-val{font-size:1.1rem;margin-top:4px}\n.btn{display:block;width:100%;margin-top:8px;padding:10px;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;transition:opacity .15s}\n.btn:active{opacity:.75}\n.btn-on{background:#22c55e;color:#fff}\n.btn-off{background:#ef4444;color:#fff}\n.st{font-size:.75rem;color:#64748b;margin-top:6px;min-height:16px}\n</style>\n</head>\n<body>\n<h1>ESP32 IoT Monitor</h1>\n<p class=\"ws-bar\">WebSocket: <span id=\"wss\" class=\"off\">disconnected</span></p>\n<div class=\"grid\">\n  <div class=\"card\">\n    <div class=\"lbl\">อุณหภูมิ</div>\n    <div class=\"val\" id=\"tmp\" style=\"color:#f97316\">--</div>\n    <div class=\"unit\">°C</div>\n  </div>\n  <div class=\"card\">\n    <div class=\"lbl\">ความชื้น</div>\n    <div class=\"val\" id=\"hum\" style=\"color:#38bdf8\">--</div>\n    <div class=\"unit\">%</div>\n  </div>\n  <div class=\"card\">\n    <div class=\"lbl\">แสง (LDR)</div>\n    <div class=\"dot dark\" id=\"dot\"></div>\n    <div class=\"ldr-val\" id=\"ldr\">--</div>\n  </div>\n  <div class=\"card\">\n    <div class=\"lbl\">Relay 1</div>\n    <button class=\"btn btn-on\" onclick=\"sendRelay(1,'ON')\">เปิด</button>\n    <button class=\"btn btn-off\" onclick=\"sendRelay(1,'OFF')\">ปิด</button>\n    <div class=\"st\" id=\"r1\"></div>\n  </div>\n  <div class=\"card\">\n    <div class=\"lbl\">Relay 2</div>\n    <button class=\"btn btn-on\" onclick=\"sendRelay(2,'ON')\">เปิด</button>\n    <button class=\"btn btn-off\" onclick=\"sendRelay(2,'OFF')\">ปิด</button>\n    <div class=\"st\" id=\"r2\"></div>\n  </div>\n</div>\n<script>\nvar sock;\nfunction connect(){\n  sock=new WebSocket('ws://'+location.host+'/ws/iot');\n  sock.onopen=function(){\n    var s=document.getElementById('wss');\n    s.textContent='connected';s.className='on';\n  };\n  sock.onclose=function(){\n    var s=document.getElementById('wss');\n    s.textContent='disconnected';s.className='off';\n    setTimeout(connect,3000);\n  };\n  sock.onmessage=function(ev){\n    var d=JSON.parse(ev.data);\n    if(d.type==='dht'){\n      document.getElementById('tmp').textContent=d.temperature;\n      document.getElementById('hum').textContent=d.humidity;\n    }\n    if(d.type==='ldr'){\n      var bright=d.value==='BRIGHT';\n      document.getElementById('dot').className='dot '+(bright?'bright':'dark');\n      document.getElementById('ldr').textContent=bright?'สว่าง':'มืด';\n    }\n  };\n}\nfunction sendRelay(n,state){\n  if(sock&&sock.readyState===1){\n    sock.send(JSON.stringify({relay:n,state:state}));\n    document.getElementById('r'+n).textContent=state;\n  }\n}\nconnect();\n</script>\n</body>\n</html>",
+    "output": "str",
+    "x": 300,
+    "y": 80,
+    "wires": [["http_res"]]
+  },
+  {
+    "id": "http_res",
+    "type": "http response",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 500,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "mqtt_dht",
+    "type": "mqtt in",
+    "name": "DHT11",
+    "topic": "DHT11",
+    "qos": "0",
+    "datatype": "utf8",
+    "broker": "hivemq",
+    "x": 100,
+    "y": 220,
+    "wires": [["func_dht"]]
+  },
+  {
+    "id": "func_dht",
+    "type": "function",
+    "name": "wrap dht",
+    "func": "var d = JSON.parse(msg.payload);\nd.type = 'dht';\nmsg.payload = JSON.stringify(d);\nreturn msg;",
+    "outputs": 1,
+    "x": 290,
+    "y": 220,
+    "wires": [["ws_out"]]
+  },
+  {
+    "id": "mqtt_ldr",
+    "type": "mqtt in",
+    "name": "LDR",
+    "topic": "LDR",
+    "qos": "0",
+    "datatype": "utf8",
+    "broker": "hivemq",
+    "x": 100,
+    "y": 300,
+    "wires": [["func_ldr"]]
+  },
+  {
+    "id": "func_ldr",
+    "type": "function",
+    "name": "wrap ldr",
+    "func": "msg.payload = JSON.stringify({ type: 'ldr', value: msg.payload });\nreturn msg;",
+    "outputs": 1,
+    "x": 290,
+    "y": 300,
+    "wires": [["ws_out"]]
+  },
+  {
+    "id": "ws_out",
+    "type": "websocket out",
+    "name": "WS → browser",
+    "server": "wsl",
+    "client": "",
+    "x": 490,
+    "y": 260,
+    "wires": []
+  },
+  {
+    "id": "ws_in",
+    "type": "websocket in",
+    "name": "WS ← browser",
+    "server": "wsl",
+    "client": "",
+    "x": 110,
+    "y": 420,
+    "wires": [["func_relay"]]
+  },
+  {
+    "id": "func_relay",
+    "type": "function",
+    "name": "relay router",
+    "func": "try {\n  var d = JSON.parse(msg.payload);\n  if (d.relay === 1) return [{ payload: d.state }, null];\n  if (d.relay === 2) return [null, { payload: d.state }];\n} catch(e) {}\nreturn [null, null];",
+    "outputs": 2,
+    "x": 310,
+    "y": 420,
+    "wires": [["mqtt_out_r1"], ["mqtt_out_r2"]]
+  },
+  {
+    "id": "mqtt_out_r1",
+    "type": "mqtt out",
+    "name": "Relay 1",
+    "topic": "relay_control",
+    "qos": "0",
+    "retain": "false",
+    "broker": "hivemq",
+    "x": 510,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "mqtt_out_r2",
+    "type": "mqtt out",
+    "name": "Relay 2",
+    "topic": "relay_control_2",
+    "qos": "0",
+    "retain": "false",
+    "broker": "hivemq",
+    "x": 510,
+    "y": 440,
+    "wires": []
+  }
+]

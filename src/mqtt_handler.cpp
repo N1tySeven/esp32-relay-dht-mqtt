@@ -29,6 +29,16 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+static void handle_relay(int pin, const char *message) {
+  if (strcmp(message, "ON") == 0) {
+    Serial.println("-> Action: Turn Relay ON");
+    digitalWrite(pin, HIGH);
+  } else if (strcmp(message, "OFF") == 0) {
+    Serial.println("-> Action: Turn Relay OFF");
+    digitalWrite(pin, LOW);
+  }
+}
+
 void callback(char *topic, byte *payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
@@ -40,19 +50,8 @@ void callback(char *topic, byte *payload, unsigned int length) {
   message[msgLen] = '\0';
   Serial.println(message);
 
-  int pin = -1;
-  if (strcmp(topic, mqtt_topic_relay) == 0)   pin = RELAY_PIN;
-  if (strcmp(topic, mqtt_topic_relay_2) == 0) pin = RELAY_PIN_2;
-
-  if (pin != -1) {
-    if (strcmp(message, "ON") == 0) {
-      Serial.println("-> Action: Turn Relay ON");
-      digitalWrite(pin, HIGH);
-    } else if (strcmp(message, "OFF") == 0) {
-      Serial.println("-> Action: Turn Relay OFF");
-      digitalWrite(pin, LOW);
-    }
-  }
+  if (strcmp(topic, mqtt_topic_relay) == 0)   handle_relay(RELAY_PIN,   message);
+  if (strcmp(topic, mqtt_topic_relay_2) == 0) handle_relay(RELAY_PIN_2, message);
 }
 
 void dht_setup() {
@@ -79,7 +78,7 @@ void ldr_publish() {
   lastState = state;
 
   const char* payload = (state == LOW) ? "BRIGHT" : "DARK";
-  client.publish(mqtt_topic_ldr, payload);
+  client.publish(mqtt_topic_ldr, payload, true);
 
   Serial.print("LDR published: ");
   Serial.println(payload);

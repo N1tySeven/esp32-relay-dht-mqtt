@@ -3,7 +3,23 @@
     "allow": [
       "Bash(Get-ChildItem -Path \"e:\\\\University\\\\Arduino\\\\Test_PlatformIO\" -Recurse -Force)",
       "Bash(Select-Object FullName)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "Skill(update-config)",
+      "Skill(update-config:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Tool call just completed: $ARGUMENTS\n\nIf the file that was edited/written is inside the src/ or include/ directory (a firmware .cpp or .h file), check whether CLAUDE.md needs to be updated to reflect the change — for example: new or renamed functions, changed behavior or timing patterns, new MQTT topics or pin definitions, changed code conventions. If CLAUDE.md needs updating, edit it now. If no update is needed, do nothing.",
+            "statusMessage": "Checking if CLAUDE.md needs update..."
+          }
+        ]
+      }
     ]
   }
 }
