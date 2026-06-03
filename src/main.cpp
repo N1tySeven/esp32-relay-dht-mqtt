@@ -14,6 +14,7 @@ void setup() {
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  dht_setup();
 }
 
 void loop() {
@@ -21,4 +22,5 @@ void loop() {
     reconnect();
   }
   client.loop();
+  dht_publish();
 }

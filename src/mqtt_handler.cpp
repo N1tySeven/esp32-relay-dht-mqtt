@@ -3,6 +3,7 @@
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+DHT dht(DHT_PIN, DHT11);
 
 void setup_wifi() {
   pinMode(LED_PIN, OUTPUT);
@@ -52,6 +53,36 @@ void callback(char *topic, byte *payload, unsigned int length) {
       digitalWrite(pin, LOW);
     }
   }
+}
+
+void dht_setup() {
+  dht.begin();
+}
+
+void dht_publish() {
+  static unsigned long lastPublish = 0;
+  const unsigned long interval = 10000;
+
+  unsigned long now = millis();
+  if (now - lastPublish < interval) return;
+  lastPublish = now;
+
+  if (!client.connected()) return;
+
+  float temp = dht.readTemperature();
+  float hum  = dht.readHumidity();
+
+  if (isnan(temp) || isnan(hum)) {
+    Serial.println("DHT11 read failed");
+    return;
+  }
+
+  char payload[48];
+  snprintf(payload, sizeof(payload), "{\"temperature\":%.1f,\"humidity\":%.1f}", temp, hum);
+  client.publish(mqtt_topic_dht, payload);
+
+  Serial.print("DHT11 published: ");
+  Serial.println(payload);
 }
 
 void reconnect() {
