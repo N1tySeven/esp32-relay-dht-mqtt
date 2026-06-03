@@ -1,0 +1,133 @@
+[
+  {
+    "id": "broker_hivemq",
+    "type": "mqtt-broker",
+    "name": "HiveMQ Public",
+    "broker": "broker.hivemq.com",
+    "port": "1883",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true
+  },
+  {
+    "id": "tab_iot",
+    "type": "ui_tab",
+    "name": "IoT Dashboard",
+    "icon": "dashboard",
+    "order": 1,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "group_ldr",
+    "type": "ui_group",
+    "name": "LDR Sensor",
+    "tab": "tab_iot",
+    "order": 3,
+    "disp": true,
+    "width": "6",
+    "collapse": false
+  },
+  {
+    "id": "mqtt_ldr_in",
+    "type": "mqtt in",
+    "name": "LDR In",
+    "topic": "LDR",
+    "qos": "0",
+    "datatype": "utf8",
+    "broker": "broker_hivemq",
+    "x": 120,
+    "y": 200,
+    "wires": [["switch_ldr", "debug_ldr"]]
+  },
+  {
+    "id": "switch_ldr",
+    "type": "switch",
+    "name": "BRIGHT / DARK",
+    "property": "payload",
+    "propertyType": "msg",
+    "rules": [
+      { "t": "eq", "v": "BRIGHT", "vt": "str" },
+      { "t": "eq", "v": "DARK",   "vt": "str" }
+    ],
+    "checkall": "false",
+    "repair": false,
+    "outputs": 2,
+    "x": 310,
+    "y": 200,
+    "wires": [["change_bright"], ["change_dark"]]
+  },
+  {
+    "id": "change_bright",
+    "type": "change",
+    "name": "BRIGHT",
+    "rules": [
+      { "t": "set", "p": "payload",    "pt": "msg", "to": "สว่าง",   "tot": "str" },
+      { "t": "set", "p": "background", "pt": "msg", "to": "#FFD700", "tot": "str" }
+    ],
+    "x": 500,
+    "y": 160,
+    "wires": [["ui_text_ldr", "ui_template_ldr"]]
+  },
+  {
+    "id": "change_dark",
+    "type": "change",
+    "name": "DARK",
+    "rules": [
+      { "t": "set", "p": "payload",    "pt": "msg", "to": "มืด",     "tot": "str" },
+      { "t": "set", "p": "background", "pt": "msg", "to": "#444444", "tot": "str" }
+    ],
+    "x": 500,
+    "y": 240,
+    "wires": [["ui_text_ldr", "ui_template_ldr"]]
+  },
+  {
+    "id": "ui_text_ldr",
+    "type": "ui_text",
+    "group": "group_ldr",
+    "order": 1,
+    "width": 3,
+    "height": 1,
+    "name": "LDR Status Text",
+    "label": "สภาพแสง",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "x": 710,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "ui_template_ldr",
+    "type": "ui_template",
+    "group": "group_ldr",
+    "name": "LDR Indicator",
+    "order": 2,
+    "width": 3,
+    "height": 2,
+    "format": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%\">\n  <div style=\"width:60px;height:60px;border-radius:50%;background:{{msg.background}};box-shadow:0 0 16px {{msg.background}};transition:background 0.5s\"></div>\n</div>",
+    "storeOutMessages": true,
+    "fwdInMessages": true,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "x": 710,
+    "y": 240,
+    "wires": [[]]
+  },
+  {
+    "id": "debug_ldr",
+    "type": "debug",
+    "name": "LDR Debug",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 310,
+    "y": 280,
+    "wires": []
+  }
+]

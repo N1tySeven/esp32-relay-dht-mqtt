@@ -45,10 +45,10 @@ void callback(char *topic, byte *payload, unsigned int length) {
   if (strcmp(topic, mqtt_topic_relay_2) == 0) pin = RELAY_PIN_2;
 
   if (pin != -1) {
-    if (strcmp(message, "ON") == 0 || strcmp(message, "on") == 0 || strcmp(message, "1") == 0) {
+    if (strcmp(message, "ON") == 0) {
       Serial.println("-> Action: Turn Relay ON");
       digitalWrite(pin, HIGH);
-    } else if (strcmp(message, "OFF") == 0 || strcmp(message, "off") == 0 || strcmp(message, "0") == 0) {
+    } else if (strcmp(message, "OFF") == 0) {
       Serial.println("-> Action: Turn Relay OFF");
       digitalWrite(pin, LOW);
     }
@@ -57,6 +57,32 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
 void dht_setup() {
   dht.begin();
+}
+
+void ldr_setup() {
+  pinMode(LDR_PIN, INPUT);
+}
+
+void ldr_publish() {
+  static unsigned long lastPublish = 0;
+  static int lastState = -1;
+  const unsigned long interval = 2000;
+
+  unsigned long now = millis();
+  if (now - lastPublish < interval) return;
+  lastPublish = now;
+
+  if (!client.connected()) return;
+
+  int state = digitalRead(LDR_PIN);
+  if (state == lastState) return;
+  lastState = state;
+
+  const char* payload = (state == LOW) ? "BRIGHT" : "DARK";
+  client.publish(mqtt_topic_ldr, payload);
+
+  Serial.print("LDR published: ");
+  Serial.println(payload);
 }
 
 void dht_publish() {

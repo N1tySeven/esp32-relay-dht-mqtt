@@ -16,5 +16,7 @@ void callback(char *topic, byte *payload, unsigned int length);
 void reconnect();
 void dht_setup();
 void dht_publish();
+void ldr_setup();
+void ldr_publish();
 
 #endif // MQTT_HANDLER_H

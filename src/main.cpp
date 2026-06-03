@@ -15,6 +15,7 @@ void setup() {
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   dht_setup();
+  ldr_setup();
 }
 
 void loop() {
@@ -23,4 +24,5 @@ void loop() {
   }
   client.loop();
   dht_publish();
+  ldr_publish();
 }
